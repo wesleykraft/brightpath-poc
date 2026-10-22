@@ -8,3 +8,4 @@ Small school app. TypeScript, Hono, SQLite (better-sqlite3), zod, vitest. Node 2
 - Code: `src/` (`app.ts` routes, `db.ts` data), page: `public/index.html`, tests: `test/`
 - New routes get tests in `test/` that call `createApp(openDb(':memory:')).request(...)`.
 - Validate request input with zod; return `{ data }` on success and `{ error: CODE }` on failure.
+- `GET /health/db` pings PostgreSQL at `DATABASE_URL` (`select 1`); tests need a reachable PostgreSQL there.
