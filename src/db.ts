@@ -32,3 +32,7 @@ export function listStudents(db: Db): Student[] {
 export function getStudent(db: Db, id: number): Student | undefined {
   return db.prepare(`SELECT ${columns} FROM students WHERE id = ?`).get(id) as Student | undefined
 }
+
+export function deleteStudent(db: Db, id: number): boolean {
+  return db.prepare('DELETE FROM students WHERE id = ?').run(id).changes > 0
+}

@@ -33,4 +33,35 @@ describe('students API', () => {
     const res = await createApp(db).request('/students/abc')
     expect(res.status).toBe(400)
   })
+
+  it('removes a student so they no longer appear in the list', async () => {
+    const app = createApp(db)
+    const res = await app.request('/students/1', { method: 'DELETE' })
+    expect(res.status).toBe(200)
+    expect((await res.json()).data).toEqual({ id: 1 })
+
+    const list = await (await app.request('/students')).json()
+    expect(list.data).toEqual([])
+    expect((await app.request('/students/1')).status).toBe(404)
+  })
+
+  it('only removes the requested student', async () => {
+    db.prepare('INSERT INTO students (name, email) VALUES (?, ?)').run('Alan Turing', 'alan@example.edu')
+    const app = createApp(db)
+    await app.request('/students/1', { method: 'DELETE' })
+    const { data } = await (await app.request('/students')).json()
+    expect(data.map((s: { name: string }) => s.name)).toEqual(['Alan Turing'])
+  })
+
+  it('returns 404 when removing an unknown student', async () => {
+    const res = await createApp(db).request('/students/999', { method: 'DELETE' })
+    expect(res.status).toBe(404)
+    expect((await res.json()).error).toBe('NOT_FOUND')
+  })
+
+  it('returns 400 when removing with an invalid id', async () => {
+    const res = await createApp(db).request('/students/abc', { method: 'DELETE' })
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toBe('INVALID_ID')
+  })
 })
