@@ -1,6 +1,11 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { type Db, getStudent, listStudents } from './db.js'
+import { type Db, createStudent, getStudent, listStudents } from './db.js'
+
+const newStudent = z.object({
+  name: z.string().trim().min(1).max(200),
+  email: z.string().trim().max(320).pipe(z.email()),
+})
 
 const idParam = z.coerce.number().int().positive()
 
@@ -10,6 +15,13 @@ export function createApp(db: Db): Hono {
   app.get('/health', (c) => c.json({ ok: true }))
 
   app.get('/students', (c) => c.json({ data: listStudents(db) }))
+
+  app.post('/students', async (c) => {
+    const body = await c.req.json().catch(() => undefined)
+    const input = newStudent.safeParse(body)
+    if (!input.success) return c.json({ error: 'INVALID_INPUT' }, 400)
+    return c.json({ data: createStudent(db, input.data) }, 201)
+  })
 
   app.get('/students/:id', (c) => {
     const id = idParam.safeParse(c.req.param('id'))
