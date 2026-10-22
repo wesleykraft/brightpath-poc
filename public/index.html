@@ -6,6 +6,7 @@
   <title>Brightpath</title>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; color: #15171a; }
+    input { width: 100%; box-sizing: border-box; padding: 8px; margin-bottom: 12px; }
     table { width: 100%; border-collapse: collapse; }
     th, td { text-align: left; padding: 8px; border-bottom: 1px solid #e3e6ea; }
   </style>
@@ -13,15 +14,16 @@
 <body>
   <h1>Brightpath</h1>
   <h2>Students</h2>
+  <input id="q" type="search" placeholder="Search by name" aria-label="Search students by name">
   <table>
     <thead><tr><th>Name</th><th>Email</th></tr></thead>
     <tbody id="students"><tr><td colspan="2">Loading…</td></tr></tbody>
   </table>
   <script>
-    async function load() {
+    async function load(q = '') {
       const body = document.getElementById('students')
       try {
-        const res = await fetch('/students')
+        const res = await fetch('/students' + (q ? '?q=' + encodeURIComponent(q) : ''))
         const { data } = await res.json()
         body.replaceChildren(...(data.length ? data.map(row) : [empty()]))
       } catch {
@@ -42,6 +44,7 @@
       tr.innerHTML = '<td colspan="2">No students yet.</td>'
       return tr
     }
+    document.getElementById('q').addEventListener('input', (e) => load(e.target.value))
     load()
   </script>
 </body>
