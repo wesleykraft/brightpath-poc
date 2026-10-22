@@ -14,8 +14,8 @@
   <h1>Brightpath</h1>
   <h2>Students</h2>
   <table>
-    <thead><tr><th>Name</th><th>Email</th></tr></thead>
-    <tbody id="students"><tr><td colspan="2">Loading…</td></tr></tbody>
+    <thead><tr><th>Name</th><th>Email</th><th></th></tr></thead>
+    <tbody id="students"><tr><td colspan="3">Loading…</td></tr></tbody>
   </table>
   <script>
     async function load() {
@@ -25,7 +25,7 @@
         const { data } = await res.json()
         body.replaceChildren(...(data.length ? data.map(row) : [empty()]))
       } catch {
-        body.innerHTML = '<tr><td colspan="2">Could not load students.</td></tr>'
+        body.innerHTML = '<tr><td colspan="3">Could not load students.</td></tr>'
       }
     }
     function row(s) {
@@ -35,11 +35,22 @@
         td.textContent = v
         tr.append(td)
       }
+      const td = document.createElement('td')
+      const btn = document.createElement('button')
+      btn.textContent = 'Remove'
+      btn.addEventListener('click', async () => {
+        if (!confirm('Remove ' + s.name + '?')) return
+        const res = await fetch('/students/' + s.id, { method: 'DELETE' })
+        if (res.ok || res.status === 404) load()
+        else alert('Could not remove student.')
+      })
+      td.append(btn)
+      tr.append(td)
       return tr
     }
     function empty() {
       const tr = document.createElement('tr')
-      tr.innerHTML = '<td colspan="2">No students yet.</td>'
+      tr.innerHTML = '<td colspan="3">No students yet.</td>'
       return tr
     }
     load()
