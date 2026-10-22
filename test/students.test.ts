@@ -9,6 +9,8 @@ beforeEach(() => {
   db.prepare('INSERT INTO students (name, email) VALUES (?, ?)').run('Ada Lovelace', 'ada@example.edu')
 })
 
+const count = () => (db.prepare('SELECT COUNT(*) AS n FROM students').get() as { n: number }).n
+
 describe('students API', () => {
   it('lists students', async () => {
     const res = await createApp(db).request('/students')
@@ -47,6 +49,13 @@ describe('students API', () => {
 
     const list = (await (await app.request('/students')).json()).data
     expect(list.map((s: { name: string }) => s.name)).toEqual(['Ada Lovelace', 'Grace Hopper'])
+
+    const one = await app.request(`/students/${data.id}`)
+    expect(one.status).toBe(200)
+    expect((await one.json()).data).toEqual(data)
+
+    const rows = db.prepare('SELECT COUNT(*) AS n FROM students WHERE email = ?').get('grace@example.edu') as { n: number }
+    expect(rows.n).toBe(1)
   })
 
   it.each([
@@ -61,10 +70,12 @@ describe('students API', () => {
     })
     expect(res.status).toBe(400)
     expect(await res.json()).toEqual({ error: 'INVALID_INPUT' })
+    expect(count()).toBe(1)
   })
 
   it('rejects a non-JSON body', async () => {
     const res = await createApp(db).request('/students', { method: 'POST', body: 'x' })
     expect(res.status).toBe(400)
+    expect(count()).toBe(1)
   })
 })
