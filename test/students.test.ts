@@ -33,4 +33,38 @@ describe('students API', () => {
     const res = await createApp(db).request('/students/abc')
     expect(res.status).toBe(400)
   })
+
+  it('creates a student that is then listed', async () => {
+    const app = createApp(db)
+    const res = await app.request('/students', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: '  Grace Hopper ', email: 'grace@example.edu' }),
+    })
+    expect(res.status).toBe(201)
+    const { data } = await res.json()
+    expect(data).toMatchObject({ id: 2, name: 'Grace Hopper', email: 'grace@example.edu' })
+
+    const list = (await (await app.request('/students')).json()).data
+    expect(list.map((s: { name: string }) => s.name)).toEqual(['Ada Lovelace', 'Grace Hopper'])
+  })
+
+  it.each([
+    ['empty name', { name: ' ', email: 'a@example.edu' }],
+    ['bad email', { name: 'A', email: 'nope' }],
+    ['missing fields', {}],
+  ])('rejects %s', async (_label, body) => {
+    const res = await createApp(db).request('/students', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'INVALID_INPUT' })
+  })
+
+  it('rejects a non-JSON body', async () => {
+    const res = await createApp(db).request('/students', { method: 'POST', body: 'x' })
+    expect(res.status).toBe(400)
+  })
 })
