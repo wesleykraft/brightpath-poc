@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brightpath</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; color: #15171a; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #e3e6ea; }
+  </style>
+</head>
+<body>
+  <h1>Brightpath</h1>
+  <h2>Students</h2>
+  <table>
+    <thead><tr><th>Name</th><th>Email</th></tr></thead>
+    <tbody id="students"><tr><td colspan="2">Loading…</td></tr></tbody>
+  </table>
+  <script>
+    async function load() {
+      const body = document.getElementById('students')
+      try {
+        const res = await fetch('/students')
+        const { data } = await res.json()
+        body.replaceChildren(...(data.length ? data.map(row) : [empty()]))
+      } catch {
+        body.innerHTML = '<tr><td colspan="2">Could not load students.</td></tr>'
+      }
+    }
+    function row(s) {
+      const tr = document.createElement('tr')
+      for (const v of [s.name, s.email]) {
+        const td = document.createElement('td')
+        td.textContent = v
+        tr.append(td)
+      }
+      return tr
+    }
+    function empty() {
+      const tr = document.createElement('tr')
+      tr.innerHTML = '<td colspan="2">No students yet.</td>'
+      return tr
+    }
+    load()
+  </script>
+</body>
+</html>
