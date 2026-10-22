@@ -18,6 +18,24 @@ describe('students API', () => {
     expect(data[0]).toMatchObject({ name: 'Ada Lovelace', email: 'ada@example.edu' })
   })
 
+  it('counts students', async () => {
+    const app = createApp(db)
+    let res = await app.request('/students/count')
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ data: { count: 1 } })
+
+    db.prepare('INSERT INTO students (name, email) VALUES (?, ?)').run('Alan Turing', 'alan@example.edu')
+    res = await app.request('/students/count')
+    expect(await res.json()).toEqual({ data: { count: 2 } })
+  })
+
+  it('returns a zero count when there are no students', async () => {
+    const empty = openDb(':memory:')
+    const res = await createApp(empty).request('/students/count')
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ data: { count: 0 } })
+  })
+
   it('gets one student by id', async () => {
     const res = await createApp(db).request('/students/1')
     expect(res.status).toBe(200)

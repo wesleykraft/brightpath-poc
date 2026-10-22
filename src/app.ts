@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { type Db, getStudent, listStudents } from './db.js'
+import { type Db, countStudents, getStudent, listStudents } from './db.js'
 
 const idParam = z.coerce.number().int().positive()
 
@@ -10,6 +10,8 @@ export function createApp(db: Db): Hono {
   app.get('/health', (c) => c.json({ ok: true }))
 
   app.get('/students', (c) => c.json({ data: listStudents(db) }))
+
+  app.get('/students/count', (c) => c.json({ data: { count: countStudents(db) } }))
 
   app.get('/students/:id', (c) => {
     const id = idParam.safeParse(c.req.param('id'))
