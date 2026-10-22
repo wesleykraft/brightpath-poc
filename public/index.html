@@ -13,6 +13,7 @@
 <body>
   <h1>Brightpath</h1>
   <h2>Students</h2>
+  <p id="count"></p>
   <table>
     <thead><tr><th>Name</th><th>Email</th></tr></thead>
     <tbody id="students"><tr><td colspan="2">Loading…</td></tr></tbody>
@@ -23,6 +24,8 @@
       try {
         const res = await fetch('/students')
         const { data } = await res.json()
+        const { data: { count } } = await (await fetch('/students/count')).json()
+        document.getElementById('count').textContent = `${count} ${count === 1 ? 'student' : 'students'}`
         body.replaceChildren(...(data.length ? data.map(row) : [empty()]))
       } catch {
         body.innerHTML = '<tr><td colspan="2">Could not load students.</td></tr>'
