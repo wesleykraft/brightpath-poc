@@ -1,6 +1,11 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { type Db, getStudent, listStudents } from './db.js'
+import { type Db, createStudent, getStudent, listStudents } from './db.js'
+
+const newStudent = z.object({
+  name: z.string().trim().min(1),
+  email: z.string().trim().email(),
+})
 
 const idParam = z.coerce.number().int().positive()
 
@@ -16,6 +21,14 @@ export function createApp(db: Db): Hono {
     if (!id.success) return c.json({ error: 'INVALID_ID' }, 400)
     const student = getStudent(db, id.data)
     return student ? c.json({ data: student }) : c.json({ error: 'NOT_FOUND' }, 404)
+  })
+
+  app.post('/students', async (c) => {
+    const body = await c.req.json().catch(() => undefined)
+    const input = newStudent.safeParse(body)
+    if (!input.success) return c.json({ error: 'INVALID_INPUT' }, 400)
+    // Emails are intentionally not unique: a repeated email creates a new student.
+    return c.json({ data: createStudent(db, input.data) }, 201)
   })
 
   app.onError((err, c) => {

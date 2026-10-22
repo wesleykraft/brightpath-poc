@@ -33,4 +33,33 @@ describe('students API', () => {
     const res = await createApp(db).request('/students/abc')
     expect(res.status).toBe(400)
   })
+
+  const post = (body: unknown) =>
+    createApp(db).request('/students', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+
+  it('adds a student', async () => {
+    const res = await post({ name: 'Grace Hopper', email: 'grace@example.edu' })
+    expect(res.status).toBe(201)
+    expect((await res.json()).data).toMatchObject({ id: 2, name: 'Grace Hopper', email: 'grace@example.edu' })
+  })
+
+  it('adds a student whose email already exists as a new student', async () => {
+    const res = await post({ name: 'Ada Two', email: 'ada@example.edu' })
+    expect(res.status).toBe(201)
+    const { data } = await res.json()
+    expect(data).toMatchObject({ id: 2, name: 'Ada Two', email: 'ada@example.edu' })
+
+    const list = await (await createApp(db).request('/students')).json()
+    expect(list.data).toHaveLength(2)
+  })
+
+  it('rejects invalid input', async () => {
+    expect((await post({ name: '', email: 'x@example.edu' })).status).toBe(400)
+    expect((await post({ name: 'X', email: 'nope' })).status).toBe(400)
+    expect((await post({})).status).toBe(400)
+  })
 })
