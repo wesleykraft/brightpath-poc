@@ -33,4 +33,19 @@ describe('students API', () => {
     const res = await createApp(db).request('/students/abc')
     expect(res.status).toBe(400)
   })
+
+  it('counts students', async () => {
+    const app = createApp(db)
+    expect(await (await app.request('/students/count')).json()).toEqual({ data: { count: 1 } })
+    db.prepare('INSERT INTO students (name, email) VALUES (?, ?)').run('Alan Turing', 'alan@example.edu')
+    const res = await app.request('/students/count')
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ data: { count: 2 } })
+  })
+
+  it('counts zero students when there are none', async () => {
+    db.prepare('DELETE FROM students').run()
+    const res = await createApp(db).request('/students/count')
+    expect(await res.json()).toEqual({ data: { count: 0 } })
+  })
 })
