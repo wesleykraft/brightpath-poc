@@ -22,7 +22,7 @@ export function createApp(db: Db): Hono {
     const id = idParam.safeParse(c.req.param('id'))
     if (!id.success) return c.json({ error: 'INVALID_ID' }, 400)
     return deleteStudent(db, id.data)
-      ? c.json({ data: { id: id.data } })
+      ? c.body(null, 204)
       : c.json({ error: 'NOT_FOUND' }, 404)
   })
 

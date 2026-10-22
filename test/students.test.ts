@@ -37,12 +37,24 @@ describe('students API', () => {
   it('removes a student so they no longer appear in the list', async () => {
     const app = createApp(db)
     const res = await app.request('/students/1', { method: 'DELETE' })
-    expect(res.status).toBe(200)
-    expect((await res.json()).data).toEqual({ id: 1 })
+    expect(res.status).toBe(204)
+    expect(await res.text()).toBe('')
 
     const list = await (await app.request('/students')).json()
     expect(list.data).toEqual([])
     expect((await app.request('/students/1')).status).toBe(404)
+  })
+
+  it('keeps the removed student record with a deleted_at timestamp', async () => {
+    await createApp(db).request('/students/1', { method: 'DELETE' })
+    const row = db.prepare('SELECT deleted_at FROM students WHERE id = 1').get() as { deleted_at: string | null }
+    expect(row.deleted_at).not.toBeNull()
+  })
+
+  it('returns 404 when removing an already removed student', async () => {
+    const app = createApp(db)
+    await app.request('/students/1', { method: 'DELETE' })
+    expect((await app.request('/students/1', { method: 'DELETE' })).status).toBe(404)
   })
 
   it('only removes the requested student', async () => {
