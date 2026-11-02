@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { type Db, createStudent, getStudent, listStudents } from './db.js'
+import { pingPostgres } from './pg.js'
 
 const newStudent = z.object({
   name: z.string().trim().min(1).max(200),
@@ -19,6 +20,12 @@ export function createApp(db: Db): Hono {
   const app = new Hono()
 
   app.get('/health', (c) => c.json({ ok: true, version }))
+
+  app.get('/health/db', async (c) =>
+    (await pingPostgres(process.env.DATABASE_URL))
+      ? c.json({ ok: true })
+      : c.json({ ok: false, error: 'DB_UNREACHABLE' }, 503),
+  )
 
   app.get('/students', (c) => {
     const query = listQuery.safeParse({ q: c.req.query('q') })
