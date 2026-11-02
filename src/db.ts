@@ -36,3 +36,10 @@ export function listStudents(db: Db, nameQuery?: string): Student[] {
 export function getStudent(db: Db, id: number): Student | undefined {
   return db.prepare(`SELECT ${columns} FROM students WHERE id = ?`).get(id) as Student | undefined
 }
+
+export function createStudent(db: Db, input: { name: string; email: string }): Student {
+  const { lastInsertRowid } = db
+    .prepare('INSERT INTO students (name, email) VALUES (?, ?)')
+    .run(input.name, input.email)
+  return getStudent(db, Number(lastInsertRowid)) as Student
+}
