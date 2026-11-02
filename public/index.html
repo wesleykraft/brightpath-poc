@@ -8,6 +8,9 @@
     body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; color: #15171a; }
     table { width: 100%; border-collapse: collapse; }
     th, td { text-align: left; padding: 8px; border-bottom: 1px solid #e3e6ea; }
+    form { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 24px; }
+    input { padding: 6px 8px; }
+    #error { color: #b42318; width: 100%; margin: 0; }
   </style>
 </head>
 <body>
@@ -17,6 +20,13 @@
     <thead><tr><th>Name</th><th>Email</th></tr></thead>
     <tbody id="students"><tr><td colspan="2">Loading…</td></tr></tbody>
   </table>
+  <h2>Add student</h2>
+  <form id="add-student">
+    <input name="name" placeholder="Name" aria-label="Name" required>
+    <input name="email" type="email" placeholder="Email" aria-label="Email" required>
+    <button type="submit">Add student</button>
+    <p id="error" role="alert" hidden></p>
+  </form>
   <script>
     async function load() {
       const body = document.getElementById('students')
@@ -42,6 +52,25 @@
       tr.innerHTML = '<td colspan="2">No students yet.</td>'
       return tr
     }
+    document.getElementById('add-student').addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const form = e.target
+      const error = document.getElementById('error')
+      error.hidden = true
+      try {
+        const res = await fetch('/students', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ name: form.name.value, email: form.email.value }),
+        })
+        if (!res.ok) throw new Error()
+        form.reset()
+        await load()
+      } catch {
+        error.textContent = 'Could not add student. Check the name and email.'
+        error.hidden = false
+      }
+    })
     load()
   </script>
 </body>
