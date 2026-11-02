@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { type Db, createStudent, getStudent, listStudents } from './db.js'
@@ -7,12 +8,16 @@ const newStudent = z.object({
   email: z.string().trim().max(320).pipe(z.email()),
 })
 
+const { version } = JSON.parse(
+  readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
+) as { version: string }
+
 const idParam = z.coerce.number().int().positive()
 
 export function createApp(db: Db): Hono {
   const app = new Hono()
 
-  app.get('/health', (c) => c.json({ ok: true }))
+  app.get('/health', (c) => c.json({ ok: true, version }))
 
   app.get('/students', (c) => c.json({ data: listStudents(db) }))
 
