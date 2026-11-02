@@ -37,6 +37,11 @@ export function getStudent(db: Db, id: number): Student | undefined {
   return db.prepare(`SELECT ${columns} FROM students WHERE id = ?`).get(id) as Student | undefined
 }
 
+export function countStudents(db: Db): number {
+  const row = db.prepare('SELECT COUNT(*) AS count FROM students').get() as { count: number }
+  return row.count
+}
+
 export function createStudent(db: Db, input: { name: string; email: string }): Student {
   const { lastInsertRowid } = db
     .prepare('INSERT INTO students (name, email) VALUES (?, ?)')

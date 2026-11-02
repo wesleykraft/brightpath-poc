@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { type Db, createStudent, getStudent, listStudents } from './db.js'
+import { type Db, countStudents, createStudent, getStudent, listStudents } from './db.js'
 import { pingPostgres } from './pg.js'
 
 const newStudent = z.object({
@@ -39,6 +39,8 @@ export function createApp(db: Db): Hono {
     if (!input.success) return c.json({ error: 'INVALID_INPUT' }, 400)
     return c.json({ data: createStudent(db, input.data) }, 201)
   })
+
+  app.get('/students/count', (c) => c.json({ data: { count: countStudents(db) } }))
 
   app.get('/students/:id', (c) => {
     const id = idParam.safeParse(c.req.param('id'))
